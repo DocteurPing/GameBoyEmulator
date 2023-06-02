@@ -69,12 +69,22 @@ impl CPU {
                             LoadByteSource::A => self.registers.a,
                             LoadByteSource::D8 => self.read_next_byte(),
                             LoadByteSource::HLI => self.bus.read_byte(self.registers.get_hl()),
-                            _ => { panic!("TODO: implement other sources") }
+                            LoadByteSource::B => self.registers.b,
+                            LoadByteSource::C => self.registers.c,
+                            LoadByteSource::D => self.registers.d,
+                            LoadByteSource::E => self.registers.e,
+                            LoadByteSource::H => self.registers.h,
+                            LoadByteSource::L => self.registers.l,
                         };
                         match target {
                             LoadByteTarget::A => self.registers.a = source_value,
                             LoadByteTarget::HLI => self.bus.write_byte(self.registers.get_hl(), source_value),
-                            _ => { panic!("TODO: implement other targets") }
+                            LoadByteTarget::B => self.registers.b = source_value,
+                            LoadByteTarget::C => self.registers.c = source_value,
+                            LoadByteTarget::D => self.registers.d = source_value,
+                            LoadByteTarget::E => self.registers.e = source_value,
+                            LoadByteTarget::H => self.registers.h = source_value,
+                            LoadByteTarget::L => self.registers.l = source_value,
                         };
                         match source {
                             LoadByteSource::D8  => self.pc.wrapping_add(2),
