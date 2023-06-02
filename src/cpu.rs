@@ -7,10 +7,31 @@ mod instructions;
 
 struct CPU {
     registers: Registers,
+    pc: u16,
+    bus: MemoryBus
+}
+
+struct MemoryBus {
+    memory: [u8; 0xFFFF]
+}
+
+impl MemoryBus {
+    fn read_bytes(&self, address:u16) -> u8 {
+        self.memory[address as usize]
+    }
 }
 
 impl CPU {
-    fn execute(&mut self, instruction: Instruction) {
+    fn step(&mut self) {
+        let instruction_byte = self.bus.read_bytes(self.pc);
+        if let Some(instruction) = Instruction::from_byte(instruction_byte) {
+            self.pc = self.execute(instruction);
+        } else {
+            panic!("Unkown instruction found for: 0x{:x}", instruction_byte);
+        }
+    }
+
+    fn execute(&mut self, instruction: Instruction) -> u16 {
         match instruction {
             Instruction::ADD(target) => {
                 match target {
@@ -23,7 +44,9 @@ impl CPU {
                     ArithmeticTarget::L => self.add(self.registers.l),
                 }
             }
+            _ => {}
         }
+        0
     }
     fn add(&mut self, nbr: u8) {
         let (result, overflow) = self.registers.a.overflowing_add(nbr);
