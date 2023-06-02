@@ -35,7 +35,7 @@ impl Registers {
         (self.d as u16) << 8 | self.e as u16
     }
 
-    fn get_hl(&self) -> u16 {
+    pub(crate) fn get_hl(&self) -> u16 {
         (self.h as u16) << 8 | self.l as u16
     }
 

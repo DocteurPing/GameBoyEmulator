@@ -2,7 +2,8 @@ pub(crate) enum Instruction {
     ADD(ArithmeticTarget),
     INC(IncTarget),
     RLC(PrefixTarget),
-    JP(JumpTest)
+    JP(JumpTest),
+    LD(LoadType),
 }
 
 pub(crate) enum ArithmeticTarget {
@@ -23,6 +24,16 @@ pub(crate) enum JumpTest {
     NotCarry,
     Carry,
     Always
+}
+
+pub(crate) enum LoadByteTarget {
+    A, B, C, D, E, H, L, HLI
+}
+pub(crate) enum LoadByteSource {
+    A, B, C, D, E, H, L, D8, HLI
+}
+pub(crate) enum LoadType {
+    Byte(LoadByteTarget, LoadByteSource),
 }
 
 impl Instruction {

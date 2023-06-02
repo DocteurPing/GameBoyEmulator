@@ -1,5 +1,5 @@
 use crate::cpu::register::Registers;
-use crate::cpu::instructions::{Instruction, JumpTest};
+use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType};
 use crate::cpu::instructions::ArithmeticTarget;
 
 mod register;
@@ -18,6 +18,9 @@ struct MemoryBus {
 impl MemoryBus {
     fn read_byte(&self, address:u16) -> u8 {
         self.memory[address as usize]
+    }
+    pub(crate) fn write_byte(&mut self, addr: u16, byte: u8) {
+        self.memory[addr as usize] = byte;
     }
 }
 
@@ -59,6 +62,28 @@ impl CPU {
                 };
                 self.jump(jump_condition)
             }
+            Instruction::LD(load_type) => {
+                match load_type {
+                    LoadType::Byte(target, source) => {
+                        let source_value = match source {
+                            LoadByteSource::A => self.registers.a,
+                            LoadByteSource::D8 => self.read_next_byte(),
+                            LoadByteSource::HLI => self.bus.read_byte(self.registers.get_hl()),
+                            _ => { panic!("TODO: implement other sources") }
+                        };
+                        match target {
+                            LoadByteTarget::A => self.registers.a = source_value,
+                            LoadByteTarget::HLI => self.bus.write_byte(self.registers.get_hl(), source_value),
+                            _ => { panic!("TODO: implement other targets") }
+                        };
+                        match source {
+                            LoadByteSource::D8  => self.pc.wrapping_add(2),
+                            _                   => self.pc.wrapping_add(1),
+                        }
+                    }
+                    _ => { panic!("TODO: implement other load types") }
+                }
+            }
             _ => self.pc
         }
     }
@@ -86,5 +111,9 @@ impl CPU {
             // 3 bytes wide (1 byte for tag and 2 bytes for jump address)
             self.pc.wrapping_add(3)
         }
+    }
+
+    fn read_next_byte(&self) -> u8 {
+        self.bus.read_byte(self.pc + 1)
     }
 }
