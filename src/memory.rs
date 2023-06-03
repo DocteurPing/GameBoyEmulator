@@ -1,8 +1,8 @@
 use crate::graphics::{GPU, VRAM_BEGIN, VRAM_END};
 
 pub(crate) struct MemoryBus {
-    memory: [u8; 0xFFFF],
-    graphics: GPU,
+    pub(crate) memory: [u8; 0xFFFF],
+    pub(crate) graphics: GPU,
 }
 
 impl MemoryBus {

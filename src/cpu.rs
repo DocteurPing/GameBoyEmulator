@@ -1,17 +1,17 @@
-use crate::cpu::register::Registers;
+mod register;
+mod instructions;
+
+pub(crate) use crate::cpu::register::{Registers, FlagRegister};
 use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, MultipleBytesRegister};
 use crate::cpu::instructions::ArithmeticTarget;
 use crate::memory::MemoryBus;
 
-mod register;
-mod instructions;
-
-struct CPU {
-    registers: Registers,
-    pc: u16,
-    bus: MemoryBus,
-    sp: u16,
-    is_halted: bool,
+pub(crate) struct CPU {
+    pub(crate) registers: Registers,
+    pub(crate) pc: u16,
+    pub(crate) bus: MemoryBus,
+    pub(crate) sp: u16,
+    pub(crate) is_halted: bool,
 }
 
 impl CPU {

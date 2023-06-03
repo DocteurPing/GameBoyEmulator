@@ -15,7 +15,7 @@ pub(crate) struct Registers {
 }
 
 #[derive(Copy, Clone)]
-pub struct FlagRegister {
+pub(crate) struct FlagRegister {
     pub(crate) zero: bool,
     pub(crate) subtract: bool,
     pub(crate) half_carry: bool,
