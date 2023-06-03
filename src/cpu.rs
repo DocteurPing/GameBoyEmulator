@@ -1,5 +1,5 @@
 use crate::cpu::register::Registers;
-use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType};
+use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, MultipleBytesRegister};
 use crate::cpu::instructions::ArithmeticTarget;
 
 mod register;
@@ -8,7 +8,8 @@ mod instructions;
 struct CPU {
     registers: Registers,
     pc: u16,
-    bus: MemoryBus
+    bus: MemoryBus,
+    sp: u16,
 }
 
 struct MemoryBus {
@@ -50,7 +51,8 @@ impl CPU {
                     ArithmeticTarget::E => self.add(self.registers.e),
                     ArithmeticTarget::H => self.add(self.registers.h),
                     ArithmeticTarget::L => self.add(self.registers.l),
-                }
+                };
+                self.pc.wrapping_add(1)
             }
             Instruction::JP(test) => {
                 let jump_condition = match test {
@@ -94,18 +96,38 @@ impl CPU {
                     _ => { panic!("TODO: implement other load types") }
                 }
             }
+            Instruction::PUSH(target) => {
+                let value = match target {
+                    MultipleBytesRegister::BC => self.registers.get_bc(),
+                    MultipleBytesRegister::AF => self.registers.get_af(),
+                    MultipleBytesRegister::DE => self.registers.get_de(),
+                    MultipleBytesRegister::HL => self.registers.get_hl(),
+                };
+                self.push(value);
+                self.pc.wrapping_add(1)
+            }
+            Instruction::POP(target) => {
+                let value = self.pop();
+                match target {
+                    MultipleBytesRegister::AF => self.registers.set_af(value),
+                    MultipleBytesRegister::BC => self.registers.set_bc(value),
+                    MultipleBytesRegister::DE => self.registers.set_de(value),
+                    MultipleBytesRegister::HL => self.registers.set_hl(value),
+                }
+
+                self.pc.wrapping_add(1)
+            }
             _ => self.pc
         }
     }
 
-    fn add(&mut self, nbr: u8) -> u16 {
+    fn add(&mut self, nbr: u8) {
         let (result, overflow) = self.registers.a.overflowing_add(nbr);
         self.registers.a = result;
         self.registers.f.zero = result == 0;
         self.registers.f.subtract = false;
         self.registers.f.carry = overflow;
         self.registers.f.half_carry = (self.registers.a & 0xF) + (result & 0xF) > 0xF;
-        self.pc.wrapping_add(1)
     }
 
     fn jump(&self, should_jump: bool) -> u16 {
@@ -125,5 +147,21 @@ impl CPU {
 
     fn read_next_byte(&self) -> u8 {
         self.bus.read_byte(self.pc + 1)
+    }
+
+    fn push(&mut self, value: u16) {
+        self.sp = self.sp.wrapping_sub(1);
+        self.bus.write_byte(self.sp, (value >> 8) as u8);
+
+        self.sp = self.sp.wrapping_sub(1);
+        self.bus.write_byte(self.sp, value as u8);
+    }
+
+    fn pop(&mut self) -> u16 {
+        let last_byte: u16 = self.bus.read_byte(self.sp) as u16;
+        self.sp = self.sp.wrapping_add(1);
+        let first_byte: u16 = self.bus.read_byte(self.sp) as u16;
+        self.sp = self.sp.wrapping_add(1);
+        first_byte << 8 | last_byte
     }
 }

@@ -1,16 +1,18 @@
 pub(crate) enum Instruction {
     ADD(ArithmeticTarget),
-    INC(IncTarget),
+    INC(ExtendedRegisterTarget),
     RLC(PrefixTarget),
     JP(JumpTest),
     LD(LoadType),
+    PUSH(MultipleBytesRegister),
+    POP(MultipleBytesRegister)
 }
 
 pub(crate) enum ArithmeticTarget {
     A, B, C, D, E, H, L,
 }
 
-pub(crate) enum IncTarget {
+pub(crate) enum ExtendedRegisterTarget {
     A, B, C, D, E, H, L, AF, BC, DE, HL
 }
 
@@ -29,11 +31,17 @@ pub(crate) enum JumpTest {
 pub(crate) enum LoadByteTarget {
     A, B, C, D, E, H, L, HLI
 }
+
 pub(crate) enum LoadByteSource {
     A, B, C, D, E, H, L, D8, HLI
 }
+
 pub(crate) enum LoadType {
     Byte(LoadByteTarget, LoadByteSource),
+}
+
+pub(crate) enum MultipleBytesRegister {
+    AF, BC, DE, HL
 }
 
 impl Instruction {
@@ -55,8 +63,8 @@ impl Instruction {
 
     fn from_byte_not_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
-            0x02 => Some(Instruction::INC(IncTarget::BC)),
-            0x13 => Some(Instruction::INC(IncTarget::DE)),
+            0x02 => Some(Instruction::INC(ExtendedRegisterTarget::BC)),
+            0x13 => Some(Instruction::INC(ExtendedRegisterTarget::DE)),
             _ => /* TODO: Add mapping for rest of instructions */ None
         }
     }
