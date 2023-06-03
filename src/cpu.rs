@@ -1,6 +1,7 @@
 use crate::cpu::register::Registers;
 use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, MultipleBytesRegister};
 use crate::cpu::instructions::ArithmeticTarget;
+use crate::memory::MemoryBus;
 
 mod register;
 mod instructions;
@@ -11,19 +12,6 @@ struct CPU {
     bus: MemoryBus,
     sp: u16,
     is_halted: bool,
-}
-
-struct MemoryBus {
-    memory: [u8; 0xFFFF]
-}
-
-impl MemoryBus {
-    fn read_byte(&self, address:u16) -> u8 {
-        self.memory[address as usize]
-    }
-    pub(crate) fn write_byte(&mut self, addr: u16, byte: u8) {
-        self.memory[addr as usize] = byte;
-    }
 }
 
 impl CPU {
