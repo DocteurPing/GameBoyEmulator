@@ -1,6 +1,6 @@
 use crate::cpu::register::Registers;
 use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, MultipleBytesRegister};
-use crate::cpu::instructions::AddTarget;
+use crate::cpu::instructions::ArithmeticTarget;
 use crate::memory::MemoryBus;
 
 mod register;
@@ -36,29 +36,57 @@ impl CPU {
         match instruction {
             Instruction::ADD(target) => {
                 match target {
-                    AddTarget::A => self.add(self.registers.a),
-                    AddTarget::B => self.add(self.registers.b),
-                    AddTarget::C => self.add(self.registers.c),
-                    AddTarget::D => self.add(self.registers.d),
-                    AddTarget::E => self.add(self.registers.e),
-                    AddTarget::H => self.add(self.registers.h),
-                    AddTarget::L => self.add(self.registers.l),
-                    AddTarget::HLI => self.add(self.bus.read_byte(self.registers.get_hl())),
-                    AddTarget::D8 => self.add(self.read_next_byte())
+                    ArithmeticTarget::A => self.add(self.registers.a),
+                    ArithmeticTarget::B => self.add(self.registers.b),
+                    ArithmeticTarget::C => self.add(self.registers.c),
+                    ArithmeticTarget::D => self.add(self.registers.d),
+                    ArithmeticTarget::E => self.add(self.registers.e),
+                    ArithmeticTarget::H => self.add(self.registers.h),
+                    ArithmeticTarget::L => self.add(self.registers.l),
+                    ArithmeticTarget::HLI => self.add(self.bus.read_byte(self.registers.get_hl())),
+                    ArithmeticTarget::D8 => self.add(self.read_next_byte())
                 };
                 self.pc.wrapping_add(1)
             }
             Instruction::ADC(target) => {
                 match target {
-                    AddTarget::A => self.adc(self.registers.a),
-                    AddTarget::B => self.adc(self.registers.b),
-                    AddTarget::C => self.adc(self.registers.c),
-                    AddTarget::D => self.adc(self.registers.d),
-                    AddTarget::E => self.adc(self.registers.e),
-                    AddTarget::H => self.adc(self.registers.h),
-                    AddTarget::L => self.adc(self.registers.l),
-                    AddTarget::HLI => self.adc(self.bus.read_byte(self.registers.get_hl())),
-                    AddTarget::D8 => self.adc(self.read_next_byte())
+                    ArithmeticTarget::A => self.adc(self.registers.a),
+                    ArithmeticTarget::B => self.adc(self.registers.b),
+                    ArithmeticTarget::C => self.adc(self.registers.c),
+                    ArithmeticTarget::D => self.adc(self.registers.d),
+                    ArithmeticTarget::E => self.adc(self.registers.e),
+                    ArithmeticTarget::H => self.adc(self.registers.h),
+                    ArithmeticTarget::L => self.adc(self.registers.l),
+                    ArithmeticTarget::HLI => self.adc(self.bus.read_byte(self.registers.get_hl())),
+                    ArithmeticTarget::D8 => self.adc(self.read_next_byte())
+                };
+                self.pc.wrapping_add(1)
+            }
+            Instruction::SUB(target) => {
+                match target {
+                    ArithmeticTarget::A => self.sub(self.registers.a),
+                    ArithmeticTarget::B => self.sub(self.registers.b),
+                    ArithmeticTarget::C => self.sub(self.registers.c),
+                    ArithmeticTarget::D => self.sub(self.registers.d),
+                    ArithmeticTarget::E => self.sub(self.registers.e),
+                    ArithmeticTarget::H => self.sub(self.registers.h),
+                    ArithmeticTarget::L => self.sub(self.registers.l),
+                    ArithmeticTarget::HLI => self.sub(self.bus.read_byte(self.registers.get_hl())),
+                    ArithmeticTarget::D8 => self.sub(self.read_next_byte())
+                };
+                self.pc.wrapping_add(1)
+            }
+            Instruction::SBC(target) => {
+                match target {
+                    ArithmeticTarget::A => self.sbc(self.registers.a),
+                    ArithmeticTarget::B => self.sbc(self.registers.b),
+                    ArithmeticTarget::C => self.sbc(self.registers.c),
+                    ArithmeticTarget::D => self.sbc(self.registers.d),
+                    ArithmeticTarget::E => self.sbc(self.registers.e),
+                    ArithmeticTarget::H => self.sbc(self.registers.h),
+                    ArithmeticTarget::L => self.sbc(self.registers.l),
+                    ArithmeticTarget::HLI => self.sbc(self.bus.read_byte(self.registers.get_hl())),
+                    ArithmeticTarget::D8 => self.sbc(self.read_next_byte())
                 };
                 self.pc.wrapping_add(1)
             }
@@ -146,7 +174,7 @@ impl CPU {
                 self.is_halted = true;
                 self.pc.wrapping_add(1)
             }
-            _ => self.pc
+            _ => panic!("TODO: support more instructions")
         }
     }
 
@@ -166,6 +194,24 @@ impl CPU {
             nbr + 1
         };
         self.add(nbr);
+    }
+
+    fn sub(&mut self, nbr: u8) {
+        let (result, overflow) = self.registers.a.overflowing_sub(nbr);
+        self.registers.a = result;
+        self.registers.f.zero = result == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.carry = overflow;
+        self.registers.f.half_carry = (self.registers.a & 0xF) < (result & 0xF);
+    }
+
+    fn sbc(&mut self, nbr: u8) {
+        let nbr = if self.registers.f.carry {
+            nbr
+        } else {
+            nbr + 1
+        };
+        self.sub(nbr);
     }
 
     fn jump(&self, should_jump: bool) -> u16 {

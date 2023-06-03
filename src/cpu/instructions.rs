@@ -1,6 +1,8 @@
 pub(crate) enum Instruction {
-    ADD(AddTarget),
-    ADC(AddTarget),
+    ADD(ArithmeticTarget),
+    ADC(ArithmeticTarget),
+    SUB(ArithmeticTarget),
+    SBC(ArithmeticTarget),
     INC(IncTarget),
     RLC(PrefixTarget),
     JP(JumpTest),
@@ -13,7 +15,7 @@ pub(crate) enum Instruction {
     HALT(),
 }
 
-pub(crate) enum AddTarget {
+pub(crate) enum ArithmeticTarget {
     A, B, C, D, E, H, L, HLI, D8
 }
 
@@ -81,25 +83,46 @@ impl Instruction {
             0x23 => Some(Instruction::INC(IncTarget::HL)),
             0x33 => Some(Instruction::INC(IncTarget::SP)),
 
-            0x87 => Some(Instruction::ADD(AddTarget::A)),
-            0x80 => Some(Instruction::ADD(AddTarget::B)),
-            0x81 => Some(Instruction::ADD(AddTarget::C)),
-            0x82 => Some(Instruction::ADD(AddTarget::D)),
-            0x83 => Some(Instruction::ADD(AddTarget::E)),
-            0x84 => Some(Instruction::ADD(AddTarget::H)),
-            0x85 => Some(Instruction::ADD(AddTarget::L)),
-            0x86 => Some(Instruction::ADD(AddTarget::HLI)),
-            0xc6 => Some(Instruction::ADD(AddTarget::D8)),
+            0x87 => Some(Instruction::ADD(ArithmeticTarget::A)),
+            0x80 => Some(Instruction::ADD(ArithmeticTarget::B)),
+            0x81 => Some(Instruction::ADD(ArithmeticTarget::C)),
+            0x82 => Some(Instruction::ADD(ArithmeticTarget::D)),
+            0x83 => Some(Instruction::ADD(ArithmeticTarget::E)),
+            0x84 => Some(Instruction::ADD(ArithmeticTarget::H)),
+            0x85 => Some(Instruction::ADD(ArithmeticTarget::L)),
+            0x86 => Some(Instruction::ADD(ArithmeticTarget::HLI)),
+            0xc6 => Some(Instruction::ADD(ArithmeticTarget::D8)),
 
-            0x8f => Some(Instruction::ADC(AddTarget::A)),
-            0x88 => Some(Instruction::ADC(AddTarget::B)),
-            0x89 => Some(Instruction::ADC(AddTarget::C)),
-            0x8a => Some(Instruction::ADC(AddTarget::D)),
-            0x8b => Some(Instruction::ADC(AddTarget::E)),
-            0x8c => Some(Instruction::ADC(AddTarget::H)),
-            0x8d => Some(Instruction::ADC(AddTarget::L)),
-            0x8e => Some(Instruction::ADC(AddTarget::HLI)),
-            0xce => Some(Instruction::ADC(AddTarget::D8)),
+            0x8f => Some(Instruction::ADC(ArithmeticTarget::A)),
+            0x88 => Some(Instruction::ADC(ArithmeticTarget::B)),
+            0x89 => Some(Instruction::ADC(ArithmeticTarget::C)),
+            0x8a => Some(Instruction::ADC(ArithmeticTarget::D)),
+            0x8b => Some(Instruction::ADC(ArithmeticTarget::E)),
+            0x8c => Some(Instruction::ADC(ArithmeticTarget::H)),
+            0x8d => Some(Instruction::ADC(ArithmeticTarget::L)),
+            0x8e => Some(Instruction::ADC(ArithmeticTarget::HLI)),
+            0xce => Some(Instruction::ADC(ArithmeticTarget::D8)),
+
+            0x97 => Some(Instruction::SUB(ArithmeticTarget::A)),
+            0x90 => Some(Instruction::SUB(ArithmeticTarget::B)),
+            0x91 => Some(Instruction::SUB(ArithmeticTarget::C)),
+            0x92 => Some(Instruction::SUB(ArithmeticTarget::D)),
+            0x93 => Some(Instruction::SUB(ArithmeticTarget::E)),
+            0x94 => Some(Instruction::SUB(ArithmeticTarget::H)),
+            0x95 => Some(Instruction::SUB(ArithmeticTarget::L)),
+            0x96 => Some(Instruction::SUB(ArithmeticTarget::HLI)),
+            0xd6 => Some(Instruction::SUB(ArithmeticTarget::D8)),
+
+            0x9f => Some(Instruction::SBC(ArithmeticTarget::A)),
+            0x98 => Some(Instruction::SBC(ArithmeticTarget::B)),
+            0x99 => Some(Instruction::SBC(ArithmeticTarget::C)),
+            0x9a => Some(Instruction::SBC(ArithmeticTarget::D)),
+            0x9b => Some(Instruction::SBC(ArithmeticTarget::E)),
+            0x9c => Some(Instruction::SBC(ArithmeticTarget::H)),
+            0x9d => Some(Instruction::SBC(ArithmeticTarget::L)),
+            0x9e => Some(Instruction::SBC(ArithmeticTarget::HLI)),
+            0xde => Some(Instruction::SBC(ArithmeticTarget::D8)),
+
             _ => /* TODO: Add mapping for rest of instructions */ None
         }
     }
