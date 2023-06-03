@@ -10,6 +10,7 @@ struct CPU {
     pc: u16,
     bus: MemoryBus,
     sp: u16,
+    is_halted: bool,
 }
 
 struct MemoryBus {
@@ -41,6 +42,9 @@ impl CPU {
     }
 
     fn execute(&mut self, instruction: Instruction) -> u16 {
+        if self.is_halted {
+            return self.pc;
+        }
         match instruction {
             Instruction::ADD(target) => {
                 match target {
@@ -117,6 +121,27 @@ impl CPU {
 
                 self.pc.wrapping_add(1)
             }
+            Instruction::CALL(test) => {
+                let jump_condition = match test {
+                    JumpTest::NotZero => !self.registers.f.zero,
+                    _ => { panic!("TODO: support more conditions") }
+                };
+                self.call(jump_condition)
+            }
+            Instruction::RET(test) => {
+                let jump_condition = match test {
+                    JumpTest::NotZero => !self.registers.f.zero,
+                    _ => { panic!("TODO: support more conditions") }
+                };
+                self.return_(jump_condition)
+            }
+            Instruction::NOP() => {
+                self.pc.wrapping_add(1)
+            }
+            Instruction::HALT() => {
+                self.is_halted = true;
+                self.pc.wrapping_add(1)
+            }
             _ => self.pc
         }
     }
@@ -162,6 +187,30 @@ impl CPU {
         self.sp = self.sp.wrapping_add(1);
         let first_byte: u16 = self.bus.read_byte(self.sp) as u16;
         self.sp = self.sp.wrapping_add(1);
+        first_byte << 8 | last_byte
+    }
+
+    fn call(&mut self, should_jump: bool) -> u16 {
+        let next_pc = self.pc.wrapping_add(3);
+        if should_jump {
+            self.push(next_pc);
+            self.read_next_word()
+        } else {
+            next_pc
+        }
+    }
+
+    fn return_(&mut self, should_jump: bool) -> u16 {
+        if should_jump {
+            self.pop()
+        } else {
+            self.pc.wrapping_add(1)
+        }
+    }
+
+    fn read_next_word(&self) -> u16 {
+        let last_byte = self.bus.read_byte(self.pc + 1) as u16;
+        let first_byte = self.bus.read_byte(self.pc + 2) as u16;
         first_byte << 8 | last_byte
     }
 }

@@ -5,7 +5,11 @@ pub(crate) enum Instruction {
     JP(JumpTest),
     LD(LoadType),
     PUSH(MultipleBytesRegister),
-    POP(MultipleBytesRegister)
+    POP(MultipleBytesRegister),
+    CALL(JumpTest),
+    RET(JumpTest),
+    NOP(),
+    HALT(),
 }
 
 pub(crate) enum ArithmeticTarget {
