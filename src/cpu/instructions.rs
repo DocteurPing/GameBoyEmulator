@@ -1,5 +1,6 @@
 pub(crate) enum Instruction {
     ADD(AddTarget),
+    ADC(AddTarget),
     INC(IncTarget),
     RLC(PrefixTarget),
     JP(JumpTest),
@@ -89,6 +90,16 @@ impl Instruction {
             0x85 => Some(Instruction::ADD(AddTarget::L)),
             0x86 => Some(Instruction::ADD(AddTarget::HLI)),
             0xc6 => Some(Instruction::ADD(AddTarget::D8)),
+
+            0x8f => Some(Instruction::ADC(AddTarget::A)),
+            0x88 => Some(Instruction::ADC(AddTarget::B)),
+            0x89 => Some(Instruction::ADC(AddTarget::C)),
+            0x8a => Some(Instruction::ADC(AddTarget::D)),
+            0x8b => Some(Instruction::ADC(AddTarget::E)),
+            0x8c => Some(Instruction::ADC(AddTarget::H)),
+            0x8d => Some(Instruction::ADC(AddTarget::L)),
+            0x8e => Some(Instruction::ADC(AddTarget::HLI)),
+            0xce => Some(Instruction::ADC(AddTarget::D8)),
             _ => /* TODO: Add mapping for rest of instructions */ None
         }
     }

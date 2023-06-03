@@ -48,6 +48,20 @@ impl CPU {
                 };
                 self.pc.wrapping_add(1)
             }
+            Instruction::ADC(target) => {
+                match target {
+                    AddTarget::A => self.adc(self.registers.a),
+                    AddTarget::B => self.adc(self.registers.b),
+                    AddTarget::C => self.adc(self.registers.c),
+                    AddTarget::D => self.adc(self.registers.d),
+                    AddTarget::E => self.adc(self.registers.e),
+                    AddTarget::H => self.adc(self.registers.h),
+                    AddTarget::L => self.adc(self.registers.l),
+                    AddTarget::HLI => self.adc(self.bus.read_byte(self.registers.get_hl())),
+                    AddTarget::D8 => self.adc(self.read_next_byte())
+                };
+                self.pc.wrapping_add(1)
+            }
             Instruction::JP(test) => {
                 let jump_condition = match test {
                     JumpTest::NotZero => !self.registers.f.zero,
@@ -143,6 +157,15 @@ impl CPU {
         self.registers.f.subtract = false;
         self.registers.f.carry = overflow;
         self.registers.f.half_carry = (self.registers.a & 0xF) + (result & 0xF) > 0xF;
+    }
+
+    fn adc(&mut self, nbr: u8) {
+        let nbr = if self.registers.f.carry {
+            nbr
+        } else {
+            nbr + 1
+        };
+        self.add(nbr);
     }
 
     fn jump(&self, should_jump: bool) -> u16 {
