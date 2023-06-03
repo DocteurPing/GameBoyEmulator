@@ -1,6 +1,6 @@
 use crate::cpu::register::Registers;
 use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, MultipleBytesRegister};
-use crate::cpu::instructions::ArithmeticTarget;
+use crate::cpu::instructions::AddTarget;
 use crate::memory::MemoryBus;
 
 mod register;
@@ -36,13 +36,15 @@ impl CPU {
         match instruction {
             Instruction::ADD(target) => {
                 match target {
-                    ArithmeticTarget::A => self.add(self.registers.a),
-                    ArithmeticTarget::B => self.add(self.registers.b),
-                    ArithmeticTarget::C => self.add(self.registers.c),
-                    ArithmeticTarget::D => self.add(self.registers.d),
-                    ArithmeticTarget::E => self.add(self.registers.e),
-                    ArithmeticTarget::H => self.add(self.registers.h),
-                    ArithmeticTarget::L => self.add(self.registers.l),
+                    AddTarget::A => self.add(self.registers.a),
+                    AddTarget::B => self.add(self.registers.b),
+                    AddTarget::C => self.add(self.registers.c),
+                    AddTarget::D => self.add(self.registers.d),
+                    AddTarget::E => self.add(self.registers.e),
+                    AddTarget::H => self.add(self.registers.h),
+                    AddTarget::L => self.add(self.registers.l),
+                    AddTarget::HLI => self.add(self.bus.read_byte(self.registers.get_hl())),
+                    AddTarget::D8 => self.add(self.read_next_byte())
                 };
                 self.pc.wrapping_add(1)
             }
