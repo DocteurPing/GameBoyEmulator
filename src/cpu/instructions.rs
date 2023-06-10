@@ -13,6 +13,7 @@ pub(crate) enum Instruction {
     RET(JumpTest),
     NOP(),
     HALT(),
+    SWAP(PrefixTarget)
 }
 
 pub(crate) enum ArithmeticTarget {
@@ -24,7 +25,7 @@ pub(crate) enum IncTarget {
 }
 
 pub(crate) enum PrefixTarget {
-    A, B, C, D, E, H, L,
+    A, B, C, D, E, H, L, HLI
 }
 
 pub(crate) enum JumpTest {
@@ -45,6 +46,11 @@ pub(crate) enum LoadByteSource {
 
 pub(crate) enum LoadType {
     Byte(LoadByteTarget, LoadByteSource),
+    Word(LoadWordTarget),
+}
+
+pub(crate) enum LoadWordTarget {
+    BC, DE, HL, SP
 }
 
 pub(crate) enum MultipleBytesRegister {
@@ -63,7 +69,15 @@ impl Instruction {
 
     fn from_byte_prefixed(byte: u8) -> Option<Instruction> {
         match byte {
-            0x00 => Some(Instruction::RLC(PrefixTarget::B)),
+            0x30 => Some(Instruction::SWAP(PrefixTarget::B)),
+            0x31 => Some(Instruction::SWAP(PrefixTarget::C)),
+            0x32 => Some(Instruction::SWAP(PrefixTarget::D)),
+            0x33 => Some(Instruction::SWAP(PrefixTarget::E)),
+            0x34 => Some(Instruction::SWAP(PrefixTarget::H)),
+            0x35 => Some(Instruction::SWAP(PrefixTarget::L)),
+            0x36 => Some(Instruction::SWAP(PrefixTarget::HLI)),
+            0x37 => Some(Instruction::SWAP(PrefixTarget::A)),
+
             _ => /* TODO: Add mapping for rest of instructions */ None
         }
     }
@@ -122,6 +136,11 @@ impl Instruction {
             0x9d => Some(Instruction::SBC(ArithmeticTarget::L)),
             0x9e => Some(Instruction::SBC(ArithmeticTarget::HLI)),
             0xde => Some(Instruction::SBC(ArithmeticTarget::D8)),
+
+            0x01 => Some(Instruction::LD(LoadType::Word(LoadWordTarget::BC))),
+            0x11 => Some(Instruction::LD(LoadType::Word(LoadWordTarget::DE))),
+            0x21 => Some(Instruction::LD(LoadType::Word(LoadWordTarget::HL))),
+            0x31 => Some(Instruction::LD(LoadType::Word(LoadWordTarget::SP))),
 
             _ => /* TODO: Add mapping for rest of instructions */ None
         }

@@ -2,7 +2,7 @@ mod register;
 mod instructions;
 
 pub(crate) use crate::cpu::register::{Registers, FlagRegister};
-use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, MultipleBytesRegister};
+use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, LoadWordTarget, MultipleBytesRegister, PrefixTarget};
 use crate::cpu::instructions::ArithmeticTarget;
 use crate::memory::MemoryBus;
 
@@ -18,7 +18,7 @@ impl CPU {
     pub(crate) fn step(&mut self) -> u16 {
         let mut instruction_byte = self.bus.read_byte(self.pc);
         // Check if it's a prefix byte
-        let is_prefix =  instruction_byte == 0xCB;
+        let is_prefix = instruction_byte == 0xCB;
         if is_prefix {
             instruction_byte = self.bus.read_byte(self.pc + 1);
         }
@@ -27,7 +27,7 @@ impl CPU {
         } else {
             panic!("Unkown instruction found for: 0x{:x}", instruction_byte);
         }
-        return self.pc
+        return self.pc;
     }
 
     fn execute(&mut self, instruction: Instruction) -> u16 {
@@ -126,9 +126,19 @@ impl CPU {
                             LoadByteTarget::L => self.registers.l = source_value,
                         };
                         match source {
-                            LoadByteSource::D8  => self.pc.wrapping_add(2),
-                            _                   => self.pc.wrapping_add(1),
+                            LoadByteSource::D8 => self.pc.wrapping_add(2),
+                            _ => self.pc.wrapping_add(1),
                         }
+                    }
+                    LoadType::Word(target) => {
+                        let word = self.read_next_word();
+                        match target {
+                            LoadWordTarget::BC => { self.registers.set_bc(word) }
+                            LoadWordTarget::DE => { self.registers.set_de(word) }
+                            LoadWordTarget::HL => { self.registers.set_hl(word) }
+                            LoadWordTarget::SP => { self.sp = word }
+                        };
+                        self.pc.wrapping_add(3)
                     }
                     _ => { panic!("TODO: implement other load types") }
                 }
@@ -174,6 +184,22 @@ impl CPU {
             Instruction::HALT() => {
                 self.is_halted = true;
                 self.pc.wrapping_add(1)
+            }
+            Instruction::SWAP(target) => {
+                match target {
+                    PrefixTarget::A => { self.registers.a = self.swap_nibbles(self.registers.a) }
+                    PrefixTarget::B => { self.registers.b = self.swap_nibbles(self.registers.b) }
+                    PrefixTarget::C => { self.registers.c = self.swap_nibbles(self.registers.c) }
+                    PrefixTarget::D => { self.registers.d = self.swap_nibbles(self.registers.d) }
+                    PrefixTarget::E => { self.registers.e = self.swap_nibbles(self.registers.e) }
+                    PrefixTarget::H => { self.registers.h = self.swap_nibbles(self.registers.h) }
+                    PrefixTarget::L => { self.registers.l = self.swap_nibbles(self.registers.l) }
+                    PrefixTarget::HLI => {
+                        let value = self.swap_nibbles(self.bus.read_byte(self.registers.get_hl()));
+                        self.bus.write_byte(self.registers.get_hl(), value)
+                    }
+                }
+                self.pc.wrapping_add(2)
             }
             _ => panic!("TODO: support more instructions")
         }
@@ -272,5 +298,14 @@ impl CPU {
         let last_byte = self.bus.read_byte(self.pc + 1) as u16;
         let first_byte = self.bus.read_byte(self.pc + 2) as u16;
         first_byte << 8 | last_byte
+    }
+
+    fn swap_nibbles(&mut self, value: u8) -> u8 {
+        let new_value = ((value & 0xf) << 4) | ((value & 0xf0) >> 4);
+        self.registers.f.zero = new_value == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.half_carry = false;
+        self.registers.f.carry = false;
+        new_value
     }
 }
