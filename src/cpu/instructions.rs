@@ -13,7 +13,8 @@ pub(crate) enum Instruction {
     RET(JumpTest),
     NOP(),
     HALT(),
-    SWAP(PrefixTarget)
+    SWAP(PrefixTarget),
+    XOR(ArithmeticTarget)
 }
 
 pub(crate) enum ArithmeticTarget {
@@ -141,6 +142,16 @@ impl Instruction {
             0x11 => Some(Instruction::LD(LoadType::Word(LoadWordTarget::DE))),
             0x21 => Some(Instruction::LD(LoadType::Word(LoadWordTarget::HL))),
             0x31 => Some(Instruction::LD(LoadType::Word(LoadWordTarget::SP))),
+
+            0xaf => Some(Instruction::XOR(ArithmeticTarget::A)),
+            0xa8 => Some(Instruction::XOR(ArithmeticTarget::B)),
+            0xa9 => Some(Instruction::XOR(ArithmeticTarget::C)),
+            0xaa => Some(Instruction::XOR(ArithmeticTarget::D)),
+            0xab => Some(Instruction::XOR(ArithmeticTarget::E)),
+            0xac => Some(Instruction::XOR(ArithmeticTarget::H)),
+            0xad => Some(Instruction::XOR(ArithmeticTarget::L)),
+            0xae => Some(Instruction::XOR(ArithmeticTarget::HLI)),
+            0xee => Some(Instruction::XOR(ArithmeticTarget::D8)),
 
             _ => /* TODO: Add mapping for rest of instructions */ None
         }

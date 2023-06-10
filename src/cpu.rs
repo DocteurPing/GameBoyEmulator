@@ -1,6 +1,7 @@
 mod register;
 mod instructions;
 
+use std::ops::BitXor;
 pub(crate) use crate::cpu::register::{Registers, FlagRegister};
 use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, LoadWordTarget, MultipleBytesRegister, PrefixTarget};
 use crate::cpu::instructions::ArithmeticTarget;
@@ -201,6 +202,20 @@ impl CPU {
                 }
                 self.pc.wrapping_add(2)
             }
+            Instruction::XOR(target) => {
+                match target {
+                    ArithmeticTarget::A => { self.xor(self.registers.a) }
+                    ArithmeticTarget::B => { self.xor(self.registers.b) }
+                    ArithmeticTarget::C => { self.xor(self.registers.c) }
+                    ArithmeticTarget::D => { self.xor(self.registers.d) }
+                    ArithmeticTarget::E => { self.xor(self.registers.e) }
+                    ArithmeticTarget::H => { self.xor(self.registers.h) }
+                    ArithmeticTarget::L => { self.xor(self.registers.l) }
+                    ArithmeticTarget::HLI => { self.xor(self.bus.read_byte(self.registers.get_hl())) }
+                    ArithmeticTarget::D8 => { self.xor(self.read_next_byte()) }
+                }
+                self.pc.wrapping_add(1)
+            }
             _ => panic!("TODO: support more instructions")
         }
     }
@@ -307,5 +322,14 @@ impl CPU {
         self.registers.f.half_carry = false;
         self.registers.f.carry = false;
         new_value
+    }
+
+    fn xor(&mut self, nbr: u8) {
+        let result = self.registers.a.bitxor(nbr);
+        self.registers.a = result;
+        self.registers.f.zero = result == 0;
+        self.registers.f.subtract = false;
+        self.registers.f.carry = false;
+        self.registers.f.half_carry = false;
     }
 }
