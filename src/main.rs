@@ -49,7 +49,7 @@ fn main() {
             graphics: GPU {
                 vram: [0; VRAM_SIZE],
                 tile_set: [empty_tile(); 384],
-                canvas_buffer: [0; WINDOW_DIMENSIONS[0] * WINDOW_DIMENSIONS[1] * 4],
+                canvas_buffer: [u32::MAX; WINDOW_DIMENSIONS[0] * WINDOW_DIMENSIONS[1] * 4],
             },
         },
         is_halted: false,
@@ -61,13 +61,14 @@ fn main() {
 fn run(cpu: CPU, mut window: Window) {
     let mut buffer: [u32; NUMBER_OF_PIXELS] = [0; NUMBER_OF_PIXELS];
     let mut cycles: usize = 0;
-    let mut current_time = Instant::now();
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        current_time = Instant::now();
-        //cycles += cpu.run()
+        cycles += 1; // cpu.run()
         if cycles >= ONE_FRAME_IN_CYCLES {
-            for (i, pixel) in cpu.bus.graphics.canvas_buffer.iter().enumerate() {
-                buffer[i] = *pixel;
+            for (i, pixel) in cpu.bus.graphics.canvas_buffer.chunks(4).enumerate() {
+                buffer[i] = (pixel[3] as u32) << 24
+                    | (pixel[2] as u32) << 16
+                    | (pixel[1] as u32) << 8
+                    | (pixel[0] as u32)
             }
             window.update_with_buffer(&buffer, WINDOW_DIMENSIONS[0], WINDOW_DIMENSIONS[1]).unwrap();
             cycles = 0;
