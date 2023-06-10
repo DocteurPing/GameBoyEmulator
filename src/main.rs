@@ -58,11 +58,11 @@ fn main() {
     run(cpu, window);
 }
 
-fn run(cpu: CPU, mut window: Window) {
+fn run(mut cpu: CPU, mut window: Window) {
     let mut buffer: [u32; NUMBER_OF_PIXELS] = [0; NUMBER_OF_PIXELS];
     let mut cycles: usize = 0;
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        cycles += 1; // cpu.run()
+        cycles += cpu.step() as usize;
         if cycles >= ONE_FRAME_IN_CYCLES {
             for (i, pixel) in cpu.bus.graphics.canvas_buffer.chunks(4).enumerate() {
                 buffer[i] = (pixel[3] as u32) << 24

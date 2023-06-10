@@ -15,7 +15,7 @@ pub(crate) struct CPU {
 }
 
 impl CPU {
-    fn step(&mut self) {
+    pub(crate) fn step(&mut self) -> u16 {
         let mut instruction_byte = self.bus.read_byte(self.pc);
         // Check if it's a prefix byte
         let is_prefix =  instruction_byte == 0xCB;
@@ -27,6 +27,7 @@ impl CPU {
         } else {
             panic!("Unkown instruction found for: 0x{:x}", instruction_byte);
         }
+        return self.pc
     }
 
     fn execute(&mut self, instruction: Instruction) -> u16 {
