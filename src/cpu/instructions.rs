@@ -48,6 +48,7 @@ pub(crate) enum LoadByteSource {
 pub(crate) enum LoadType {
     Byte(LoadByteTarget, LoadByteSource),
     Word(LoadWordTarget),
+    IndirectFromA(Indirect)
 }
 
 pub(crate) enum LoadWordTarget {
@@ -56,6 +57,15 @@ pub(crate) enum LoadWordTarget {
 
 pub(crate) enum MultipleBytesRegister {
     AF, BC, DE, HL
+}
+
+pub(crate) enum Indirect {
+    BCIndirect,
+    DEIndirect,
+    HLIndirectMinus,
+    HLIndirectPlus,
+    WordIndirect,
+    LastByteIndirect,
 }
 
 impl Instruction {
@@ -152,6 +162,13 @@ impl Instruction {
             0xad => Some(Instruction::XOR(ArithmeticTarget::L)),
             0xae => Some(Instruction::XOR(ArithmeticTarget::HLI)),
             0xee => Some(Instruction::XOR(ArithmeticTarget::D8)),
+
+            0xe2 => Some(Instruction::LD(LoadType::IndirectFromA(Indirect::LastByteIndirect))),
+            0x02 => Some(Instruction::LD(LoadType::IndirectFromA(Indirect::BCIndirect))),
+            0x12 => Some(Instruction::LD(LoadType::IndirectFromA(Indirect::DEIndirect))),
+            0x22 => Some(Instruction::LD(LoadType::IndirectFromA(Indirect::HLIndirectPlus))),
+            0x32 => Some(Instruction::LD(LoadType::IndirectFromA(Indirect::HLIndirectMinus))),
+            0xea => Some(Instruction::LD(LoadType::IndirectFromA(Indirect::WordIndirect))),
 
             _ => /* TODO: Add mapping for rest of instructions */ None
         }

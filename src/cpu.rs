@@ -3,7 +3,7 @@ mod instructions;
 
 use std::ops::BitXor;
 pub(crate) use crate::cpu::register::{Registers, FlagRegister};
-use crate::cpu::instructions::{Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, LoadWordTarget, MultipleBytesRegister, PrefixTarget};
+use crate::cpu::instructions::{Indirect, Instruction, JumpTest, LoadByteSource, LoadByteTarget, LoadType, LoadWordTarget, MultipleBytesRegister, PrefixTarget};
 use crate::cpu::instructions::ArithmeticTarget;
 use crate::memory::MemoryBus;
 
@@ -140,6 +140,42 @@ impl CPU {
                             LoadWordTarget::SP => { self.sp = word }
                         };
                         self.pc.wrapping_add(3)
+                    }
+                    LoadType::IndirectFromA(target) => {
+                        let a = self.registers.a;
+                        match target {
+                            Indirect::BCIndirect => {
+                                let bc = self.registers.get_bc();
+                                self.bus.write_byte(bc, a)
+                            }
+                            Indirect::DEIndirect => {
+                                let de = self.registers.get_de();
+                                self.bus.write_byte(de, a)
+                            }
+                            Indirect::HLIndirectMinus => {
+                                let hl = self.registers.get_hl();
+                                self.registers.set_hl(hl.wrapping_sub(1));
+                                self.bus.write_byte(hl, a);
+                            }
+                            Indirect::HLIndirectPlus => {
+                                let hl = self.registers.get_hl();
+                                self.registers.set_hl(hl.wrapping_add(1));
+                                self.bus.write_byte(hl, a);
+                            }
+                            Indirect::WordIndirect => {
+                                let word = self.read_next_word();
+                                self.bus.write_byte(word, a);
+                            }
+                            Indirect::LastByteIndirect => {
+                                let c = self.registers.c as u16;
+                                self.bus.write_byte(0xFF00 + c, a);
+                            }
+                        };
+
+                        match target {
+                            Indirect::WordIndirect => self.pc.wrapping_add(3),
+                            _ => self.pc.wrapping_add(1),
+                        }
                     }
                     _ => { panic!("TODO: implement other load types") }
                 }
