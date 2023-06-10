@@ -20,12 +20,12 @@ const NUMBER_OF_PIXELS: usize = 23040;
 const ONE_FRAME_IN_CYCLES: usize = 70224;
 
 fn main() {
-    // let args = App::new("Emulator")
-    //     .arg(Arg::with_name("boot").short("b"))
-    //     .arg(Arg::with_name("rom").short("r"))
-    //     .get_matches();
-    // let boot = args.value_of("boot").map(|path| buffer_from_file(path));
-    // let rom = args.value_of("rom").map(|path| buffer_from_file(path));
+    let args = App::new("Emulator")
+        .arg(Arg::with_name("boot").short("b").value_name("FILE"))
+        .arg(Arg::with_name("rom").short("r").value_name("FILE"))
+        .get_matches();
+    let boot = args.value_of("boot").map(|path| buffer_from_file(path));
+    let rom = args.value_of("rom").map(|path| buffer_from_file(path)).unwrap();
     let cpu = CPU {
         registers: Registers {
             a: 0,
@@ -44,14 +44,7 @@ fn main() {
         },
         pc: 0x0,
         sp: 0x00,
-        bus: MemoryBus {
-            memory: [0; 0xFFFF],
-            graphics: GPU {
-                vram: [0; VRAM_SIZE],
-                tile_set: [empty_tile(); 384],
-                canvas_buffer: [u32::MAX; WINDOW_DIMENSIONS[0] * WINDOW_DIMENSIONS[1] * 4],
-            },
-        },
+        bus: MemoryBus::new(boot, rom),
         is_halted: false,
     };
     let window = Window::new("Emulator", WINDOW_DIMENSIONS[0], WINDOW_DIMENSIONS[1], WindowOptions::default()).unwrap();
